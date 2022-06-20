@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "pg": "^8.7.3"
+  },
+  "name": "ticket_system_backend",
+  "description": "API for Ticket_System Final Project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/karimnroses/ticket_system_backend.git"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "PSQL"
+  ],
+  "author": "Karim & Mario",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/karimnroses/ticket_system_backend/issues"
+  },
+  "homepage": "https://github.com/karimnroses/ticket_system_backend#readme"
+}
