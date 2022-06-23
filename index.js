@@ -2,6 +2,7 @@ import "dotenv/config.js";
 import express from "express";
 import cors from "cors"
 import userRouter from './routes/usersRouter.js'
+import adminRouter from "./routes/adminRouter.js";
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -16,6 +17,8 @@ app.use(express.json());
 
 
 app.use("/api/user", userRouter)
+app.use("/api/admin", adminRouter)
+
 
 app.get("/", (req, res) => {
     res.send("welcome to ticket system");
