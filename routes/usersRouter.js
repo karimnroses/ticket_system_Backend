@@ -1,9 +1,17 @@
 import { Router } from "express";
-import { logIn } from "../controllers/usersController.js";
+import { getAllMyTickets, createNewTicket, updateTicket } from "../controllers/usersController.js";
+import { logIn } from "../controllers/logInOutController.js"
 
 const userRouter = Router();
 
-userRouter.get("/login", logIn);
+userRouter.route("/login").post(logIn);
+userRouter.route("/:username/my-tickets").get(getAllMyTickets).post(createNewTicket).put(updateTicket)
+
+
+
+
+
+
 
 
 
