@@ -37,3 +37,8 @@ export const updateMyContactData = (req, res) =>  {
   const { currentPassword, newPassword, currenEmail, newEmail } = req.body;
 
 }
+
+/*********************___Verify Session___*************************/
+export const verifySession = (req, res) => {
+  res.status(200).send("Token successfully verified");
+};

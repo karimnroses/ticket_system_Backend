@@ -18,22 +18,23 @@ export const logIn = async (req, res) => {
       console.log(isPasswordCorrect);
       if (isPasswordCorrect) {
         console.log("password match");
+        //create and assign a token
         const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
           expiresIn: "1h",
         });
         //Send User/Admin Details && Content
-        const findUserDetails = await pool.query(
-          `SELECT company.name, users.username, roles.role 
-          FROM company
-          INNER JOIN users ON company.id = users.company_id
-          INNER JOIN roles ON roles.id = users.role_id
-          WHERE email = $1; 
-           `,
-          [email]
-        );
-        res.status(200).set("Authorization", token).send("Login successful");
+        // const findUserDetails = await pool.query(
+        //   `SELECT company.name, users.username, roles.role 
+        //   FROM company
+        //   INNER JOIN users ON company.id = users.company_id
+        //   INNER JOIN roles ON roles.id = users.role_id
+        //   WHERE email = $1; 
+        //    `,
+        //   [email]
+        // );
+        res.status(200).set("authorization", token).send("Login successful");
         
-        console.log(findUserDetails.rows[0]);
+       
       } else {
         console.log("password not match");
         res.status(401).send("Unauthorized");
@@ -42,3 +43,7 @@ export const logIn = async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   };
+
+
+  /*********************___ ___*************************/
+  
