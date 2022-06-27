@@ -149,33 +149,37 @@ export const deleteUser = async (req, res) => {
       ])
       .then((user) => {
         if (user.rowCount == 0) {
-          res
-            .status(404)
-            .json("User not found")
+          res.status(404).json("User not found");
         } else {
-          pool
-            .query(
-              //Get the Admin Password from the Database
-              `SELECT password FROM users WHERE username = $1;`,
-              [adminUsername], (err, result) => {
-                const adminStoredPassword = result.rows[0].password;
-                //Compare the given password with the stored password
-              bcrypt.compare(adminPassword,adminStoredPassword).then((result)=>{
-                if(result){  //Password matches
-                  pool.query(
-                    `Delete from users WHERE username = $1 AND email = $2 RETURNING *`,[username, email], (err, result) => {
-                      if(err){ 
-                        throw err;
-                    }
-                    res.status(200).json("User successfully deleted")
-                })
-                  
-                } else {  //Password does not match
-                     res.status(200).json("Something went wrong!!")
-                }
-              })
-              }
-            )      
+          pool.query(
+            //Get the Admin Password from the Database
+            `SELECT password FROM users WHERE username = $1;`,
+            [adminUsername],
+            (err, result) => {
+              const adminStoredPassword = result.rows[0].password;
+              //Compare the given password with the stored password
+              bcrypt
+                .compare(adminPassword, adminStoredPassword)
+                .then((result) => {
+                  if (result) {
+                    //Password matches
+                    pool.query(
+                      `Delete from users WHERE username = $1 AND email = $2 RETURNING *`,
+                      [username, email],
+                      (err, result) => {
+                        if (err) {
+                          throw err;
+                        }
+                        res.status(200).json("User successfully deleted");
+                      }
+                    );
+                  } else {
+                    //Password does not match
+                    res.status(200).json("Something went wrong!!");
+                  }
+                });
+            }
+          );
         }
       });
   } catch (error) {
@@ -187,10 +191,31 @@ export const deleteUser = async (req, res) => {
 export const updateUser = async (req, res) => {};
 
 /*********************___Get a list of all users___*************************/
-export const getAllUsers = async (req, res) => {};
+export const getAllUsers = async (req, res) => {
+  const { company_name } = req.body;
+  try {
+    await pool.query(
+      `SELECT first_name, last_name, email, username, name AS "company_Name" FROM users u 
+      INNER JOIN company c 
+      ON u.company_id = c.id
+      ORDER BY c.name ASC;`,
+      (err, result) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+        }
+        console.log(result.rows);
+        res.status(200).json(result);
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 /*********************___Delete User Ticket___*************************/
-export const deleteUserTicket = async (req, res) => {};
+export const deleteUserTicket = async (req, res) => {
+  
+};
 
 /*********************___Update existing Ticket ___*************************/
 export const updateTicket = async (req, res) => {};
@@ -203,3 +228,4 @@ export const getUserInfos = async (req, res) => {};
 
 /*********************___Get all the Tickets from All Users___*************************/
 export const getTicketsFromAllUsers = async (req, res) => {};
+ 

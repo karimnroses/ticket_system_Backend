@@ -11,8 +11,8 @@ const adminRouter = Router();
 adminRouter.route("/login").post(logIn);
 adminRouter.route("/:username/tickets").get(getUserTickets).delete(deleteUserTicket).put(updateTicket)
 adminRouter.route("/tickets").get(getTicketsFromAllUsers)
-adminRouter.route("/users").get(getAllUsers).delete(deleteUser)
-adminRouter.route("/users/addNewUser").post(createNewUser)
+adminRouter.route("/users").get(getAllUsers).delete(deleteUser)//in progress
+adminRouter.route("/users/addNewUser").post(createNewUser)//done 
 adminRouter.route("/:username/infos").get(getUserInfos).put(updateUser)
 
 
