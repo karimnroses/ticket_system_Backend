@@ -48,7 +48,7 @@ export const createNewUser = async (req, res) => {
                 //company dont exists => Add new Company first
                 pool
                   .query(
-                    `INSERT INTO company (name, adress, number, zip, city, country) 
+                    `INSERT INTO company (name, adress, number, zip, city, country)
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
                     [company_name, adress, number, zip, city, country]
                   )
@@ -195,8 +195,8 @@ export const getAllUsers = async (req, res) => {
   const { company_name } = req.body;
   try {
     await pool.query(
-      `SELECT first_name, last_name, email, username, name AS "company_Name" FROM users u 
-      INNER JOIN company c 
+      `SELECT  u.id AS "user_id", first_name, last_name, email, username, name AS "company_Name" FROM users u
+      INNER JOIN company c
       ON u.company_id = c.id
       ORDER BY c.name ASC;`,
       (err, result) => {
@@ -214,18 +214,45 @@ export const getAllUsers = async (req, res) => {
 
 /*********************___Delete User Ticket___*************************/
 export const deleteUserTicket = async (req, res) => {
-  
+  const { ticket_id, email, username, adminPassword, adminUsername } = req.body;
 };
 
 /*********************___Update existing Ticket ___*************************/
 export const updateTicket = async (req, res) => {};
 
 /*********************___Get All the Ticket from one User___*************************/
-export const getUserTickets = async (req, res) => {};
+export const getCompanyTickets = async (req, res) => {
+  const { name } = req.body;
+  try {
+    await pool.query(
+    `
+    SELECT c.name, u.username, t.subject 
+    FROM company c
+    JOIN users u
+    ON c.id = u.company_id
+    JOIN ticketit t
+    ON u.id = t.user_id
+    WHERE c.name = $1
+    ORDER BY c.name ASC
+    `
+    ,[name],
+      (err, result) => {
+        if (result.rowCount==0) {
+          res.status(404).json("The selected company has no Tickets");
+        }else{
+          console.log(result.rows);
+          res.status(200).json(result);
+        }
+      
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 /*********************___Get Infos from a User___*************************/
 export const getUserInfos = async (req, res) => {};
 
 /*********************___Get all the Tickets from All Users___*************************/
 export const getTicketsFromAllUsers = async (req, res) => {};
- 
