@@ -13,8 +13,8 @@ export const logIn = async (req, res) => {
       const user = findUser.rows[0];
       console.log(user.password);
       console.log(password);
-      // const isPasswordCorrect = await bcrypt.compare(password, user.password);
-      const isPasswordCorrect = password === user.password ? "true" : "false";
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      //const isPasswordCorrect = password === user.password ? "true" : "false";
       console.log(isPasswordCorrect);
       if (isPasswordCorrect) {
         console.log("password match");
