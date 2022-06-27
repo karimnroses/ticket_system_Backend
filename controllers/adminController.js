@@ -157,24 +157,25 @@ export const deleteUser = async (req, res) => {
             .query(
               //Get the Admin Password from the Database
               `SELECT password FROM users WHERE username = $1;`,
-              [adminUsername]
-            )
-            .then((res) => {
-              const adminStoredPassword = res.rows[0].password;
-              //Compare the given password with the stored password
+              [adminUsername], (err, result) => {
+                const adminStoredPassword = result.rows[0].password;
+                //Compare the given password with the stored password
               bcrypt.compare(adminPassword,adminStoredPassword).then((result)=>{
                 if(result){  //Password matches
                   pool.query(
-                    `Delete from users WHERE username = $1 AND email = $2 RETURNING *`,[username, email]
-                  )
-                  .then((res) => res.status(204).json("User successfully deleted"))
-                  .catch((err) =>json(err))
+                    `Delete from users WHERE username = $1 AND email = $2 RETURNING *`,[username, email], (err, result) => {
+                      if(err){ 
+                        throw err;
+                    }
+                    res.status(200).json("User successfully deleted")
+                })
+                  
                 } else {  //Password does not match
-                     console.log("Something went wrong!!");
-                     res.status(204).json("something sdsd ")
+                     res.status(200).json("Something went wrong!!")
                 }
               })
-              })   
+              }
+            )      
         }
       });
   } catch (error) {
