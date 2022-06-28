@@ -9,8 +9,8 @@ import { getTicketsFromAllUsers, getUserInfos, getCompanyTickets, deleteUserTick
 
 const adminRouter = Router();
 adminRouter.route("/login").post(logIn);
-adminRouter.route("/ticketsprocompany").get(getCompanyTickets).delete(deleteUserTicket).put(updateTicket)//in progress
-adminRouter.route("/tickets").get(getTicketsFromAllUsers)
+adminRouter.route("/ticketsprocompany").get(getCompanyTickets).delete(deleteUserTicket).put(updateTicket)// 2/3 done
+adminRouter.route("/tickets").get(getTicketsFromAllUsers) //done Aber muss später wenn wir mehrere Tickets haben nochmal geprüft werden
 adminRouter.route("/users").get(getAllUsers).delete(deleteUser)//done
 adminRouter.route("/users/addNewUser").post(createNewUser)//done 
 adminRouter.route("/:username/infos").get(getUserInfos).put(updateUser)
