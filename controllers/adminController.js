@@ -218,15 +218,36 @@ export const deleteUserTicket = async (req, res) => {
 };
 
 /*********************___Update existing Ticket ___*************************/
-export const updateTicket = async (req, res) => {};
+export const updateTicket = async (req, res) => {
+  const { id, new_ticket_status_id } = req.body; //Hier soll im Frontend Wenn admin einen Status gewählt hat nur die ID des gewählten Status in die Request geschickt werden
+
+  const findTicket = await pool.query(`SELECT * FROM Ticketit WHERE id = $1`, [
+    id,
+  ]);
+  if (findTicket.rowCount === 0) {
+    res.status(404).json("Ticket not found");
+  } else {
+    await pool
+      .query(`UPDATE ticketit SET status_id = $1 WHERE id = $2 RETURNING *;`, [
+        new_ticket_status_id,
+        id,
+      ])
+      .then((results) => {
+        res.status(200).json("Status successfully updated");
+      })
+      .catch((err) => {
+        res.status(500).json({err: err.message});
+      });
+  }
+};
 
 /*********************___Get All the Ticket from one User___*************************/
 export const getCompanyTickets = async (req, res) => {
   const { name } = req.body;
   try {
     await pool.query(
-    `
-    SELECT c.name, u.username, t.subject 
+      `
+    SELECT t.id, t.subject ,c.name, u.username
     FROM company c
     JOIN users u
     ON c.id = u.company_id
@@ -234,16 +255,15 @@ export const getCompanyTickets = async (req, res) => {
     ON u.id = t.user_id
     WHERE c.name = $1
     ORDER BY c.name ASC
-    `
-    ,[name],
+    `,
+      [name],
       (err, result) => {
-        if (result.rowCount==0) {
+        if (result.rowCount === 0) {
           res.status(404).json("The selected company has no Tickets");
-        }else{
+        } else {
           console.log(result.rows);
           res.status(200).json(result);
         }
-      
       }
     );
   } catch (error) {

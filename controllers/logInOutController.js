@@ -16,7 +16,7 @@ export const logIn = async (req, res) => {
         res.status(404).send("Unauthorized")
 
       } else { //If Email exists
-      const user = findUser.rows[0];
+      const user = findUser.rows;
 
       //Compare the given password with the stored user's password
       const isPasswordCorrect = await bcrypt.compare(password, user.password);
