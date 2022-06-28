@@ -275,4 +275,39 @@ export const getCompanyTickets = async (req, res) => {
 export const getUserInfos = async (req, res) => {};
 
 /*********************___Get all the Tickets from All Users___*************************/
-export const getTicketsFromAllUsers = async (req, res) => {};
+export const getTicketsFromAllUsers = async (req, res) => {
+  const { orderBy, ascOrDesc } = req.body;
+try {
+  await pool.query(
+    `
+    SELECT 
+    t.subject, t.content, t.created_at, t.completed_at, t.img_url,
+    u.first_name, u.last_name, u.username, u.email,
+    c.name,
+    ca.name, ca.color,
+    s.status, s.color
+    FROM ticketit t
+    JOIN users u
+    ON t.user_id = u.id
+    JOIN company c
+    ON u.company_id = c.id
+    JOIN ticketit_category ca
+    ON t.category_id = ca.id
+    JOIN ticketit_status s
+    ON t.status_id = s.id
+    ORDER BY ${orderBy} ${ascOrDesc}
+    `
+  )
+  .then((results) => {
+    if (results.rowCount === 0) {
+      res.status(404).json("The selected company has no Tickets"); 
+    } else {
+      res.status(200).json(results)
+    }
+  })
+    
+} catch (error) {
+  res.status(500).json({ error: error.message });
+ 
+}
+};
