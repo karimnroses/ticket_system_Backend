@@ -7,7 +7,6 @@ import jwt from "jsonwebtoken";
 export const createNewCompany = async (req, res) => {
   try {
     const { company_name, adress, number, zip, city, country } = req.body;
-
     await pool.query(
       `
       SELECT * FROM company WHERE name = $1;
@@ -18,13 +17,14 @@ export const createNewCompany = async (req, res) => {
       if(company.rowCount !== 0){
         res.status(409).json("Company already exists")
       } else {
+        const status_id = 1;
          pool.query(
           `
           INSERT INTO company 
-          (name, adress, number, zip, city, country)
-          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
+          (name, adress, number, zip, city, country, status_id)
+          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;
           `,
-          [company_name, adress, number, zip, city, country]
+          [company_name, adress, number, zip, city, country, status_id]
         )
         .then(result => res.status(201).json(result))
         .catch(err => res.status(500).json({error : err.message}))
