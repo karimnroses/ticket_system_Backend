@@ -1,7 +1,40 @@
 import pool from "../db/pg.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import e, { json } from "express";
+
+
+/*********************___Create a New Company__*************************/
+export const createNewCompany = async (req, res) => {
+  try {
+    const { company_name, adress, number, zip, city, country } = req.body;
+
+    await pool.query(
+      `
+      SELECT * FROM company WHERE name = $1;
+      `
+      ,[company_name]
+    )
+    .then((company) => {
+      if(company.rowCount !== 0){
+        res.status(409).json("Company already exists")
+      } else {
+         pool.query(
+          `
+          INSERT INTO company 
+          (name, adress, number, zip, city, country)
+          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
+          `,
+          [company_name, adress, number, zip, city, country]
+        )
+        .then(result => res.status(201).json(result))
+        .catch(err => res.status(500).json({error : err.message}))
+      }
+    })
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 /*********************___Create a New User___*************************/
 export const createNewUser = async (req, res) => {
@@ -236,7 +269,7 @@ export const updateTicket = async (req, res) => {
         res.status(200).json("Status successfully updated");
       })
       .catch((err) => {
-        res.status(500).json({err: err.message});
+        res.status(500).json({ err: err.message });
       });
   }
 };
@@ -274,9 +307,10 @@ export const getCompanyTickets = async (req, res) => {
 /*********************___Get all the Tickets from All Users___*************************/
 export const getTicketsFromAllUsers = async (req, res) => {
   const { orderBy, ascOrDesc } = req.body;
-try {
-  await pool.query(
-    `
+  try {
+    await pool
+      .query(
+        `
     SELECT 
     t.subject, t.content, t.created_at, t.completed_at, t.img_url,
     u.first_name, u.last_name, u.username, u.email,
@@ -294,19 +328,17 @@ try {
     ON t.status_id = s.id
     ORDER BY ${orderBy} ${ascOrDesc}
     `
-  )
-  .then((results) => {
-    if (results.rowCount === 0) {
-      res.status(404).json("The selected company has no Tickets"); 
-    } else {
-      res.status(200).json(results)
-    }
-  })
-    
-} catch (error) {
-  res.status(500).json({ error: error.message });
- 
-}
+      )
+      .then((results) => {
+        if (results.rowCount === 0) {
+          res.status(404).json("The selected company has no Tickets");
+        } else {
+          res.status(200).json(results);
+        }
+      });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 /*********************___Get Infos from a User___*************************/
@@ -314,24 +346,24 @@ export const getCompanyInfos = async (req, res) => {
   const { company_name } = req.body;
 
   try {
-    await pool.query(
-      `
+    await pool
+      .query(
+        `
       SELECT 
       name, adress, number, zip, city, country
       FROM company
       WHERE name = $1
-      `
-      , [company_name]
-    )
-    .then((results) => {
-      if(results.rowCount === 0) {
-        res.status(404).json("Something went wrong!!")
-      } else {
-        res.status(200).json(results)
-      }
-    })
+      `,
+        [company_name]
+      )
+      .then((results) => {
+        if (results.rowCount === 0) {
+          res.status(404).json("Something went wrong!!");
+        } else {
+          res.status(200).json(results);
+        }
+      });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-
 };
