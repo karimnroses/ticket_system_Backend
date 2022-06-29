@@ -12,7 +12,7 @@ adminRouter.route("/login").post(logIn);//done
 adminRouter.route("/ticketsprocompany").get(getCompanyTickets).put(updateTicket)//done
 adminRouter.route("/tickets").get(getTicketsFromAllUsers) //done Aber muss später wenn wir mehrere Tickets haben nochmal geprüft werden
 adminRouter.route("/users").get(getAllUsers).delete(deleteUser)//done
-adminRouter.route("/users/addNewUser").post(createNewUser)//done 
+adminRouter.route("/users/addnewuser").post(createNewUser)//done 
 adminRouter.route("/companies/addnewcompany").post(createNewCompany)
 adminRouter.route("/company/infos").get(getCompanyInfos)
 

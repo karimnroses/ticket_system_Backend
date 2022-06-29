@@ -48,127 +48,72 @@ export const createNewUser = async (req, res) => {
       last_name,
       username,
       company_name,
-      adress,
-      number,
-      zip,
-      city,
-      country,
-      role,
+      role
     } = req.body;
+
+    const hashedPassword = await bcrypt.hash(password, 10); // password hashing
 
     await pool
       .query(`SELECT id FROM roles WHERE role = $1;`, [role])
-      .then((roleID) => (role_id = roleID.rows[0].id)); //Get the role ID from roles Table
-    const hashedPassword = await bcrypt.hash(password, 10);
-
+      .then((roleID) => role_id = roleID.rows[0].id); //Get the role ID from roles Table
+    
+      await pool
+      .query(`SELECT id FROM company WHERE name = $1;`, [company_name])
+      .then((companyID) => company_id = companyID.rows[0].id); //Get the company ID from company Table
+    
     //Check if Username OR Email  already used
     await pool
-      .query(`SELECT * FROM users WHERE  email = $1 OR username = $2;`, [
+      .query(`SELECT email, username FROM users WHERE  email = $1 OR username = $2;`, 
+      [
         email,
         username,
       ])
       .then((user) => {
-        if (user.rowCount == 0) {
-          //Username OR Email not used
-          pool
-            .query(
-              //Check if Company already exists
-              `SELECT * FROM company WHERE name=$1;`,
-              [company_name]
-            )
-            .then((company) => {
-              if (company.rowCount == 0) {
-                //company dont exists => Add new Company first
-                pool
-                  .query(
-                    `INSERT INTO company (name, adress, number, zip, city, country)
-               VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
-                    [company_name, adress, number, zip, city, country]
-                  )
-                  .then((addedCompany) => {
-                    company_id = addedCompany.rows[0].id; //Get the Id from the new Company (To insert in Users as company_id)
-                    //console.log(`company ID: ${company_id}`);
-                    if (company_id) {
-                      pool
-                        .query(
-                          `INSERT INTO users (email, password, first_name, last_name, username, company_id, role_id)
-                  VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`,
-                          [
-                            email,
-                            hashedPassword,
-                            first_name,
-                            last_name,
-                            username,
-                            company_id,
-                            role_id,
-                          ]
-                        )
-                        .then((user) => {
-                          const newUser = user.rows[0];
-                          console.log(newUser);
+        if (user.rowCount !== 0) { //Username already used
+          res.status(409).json("User already exists")
 
-                          const token = jwt.sign(
-                            { email: user.email }, //payload
-                            process.env.JWT_SECRET, //secret
-                            { expiresIn: "1h" } //options
-                          );
-                          //console.log(token);
-                          if (token) {
-                            res
-                              .status(201)
-                              .set("Authorization", token) //fügt dem Header der Response ein Feld "Authorization" hinzu mit dem Wert des tokens
-                              .json(user);
-                          }
-                        })
-                        .catch((err) => res.json(err));
-                    }
-                  });
-              } else {
-                console.log("Company Already Exists");
-                //If the Company already exists --> Get the Company ID from the Response
-                company_id = company.rows[0].id;
-                pool
-                  .query(
-                    `INSERT INTO users (email, password, first_name, last_name, username, company_id, role_id)
-                VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`,
-                    [
-                      email,
-                      hashedPassword,
-                      first_name,
-                      last_name,
-                      username,
-                      company_id,
-                      role_id,
-                    ]
-                  )
-                  .then((user) => {
-                    console.log(user.rows[0]);
-                    //token kreieren
-                    const token = jwt.sign(
-                      { email: user.email }, //payload
-                      process.env.JWT_SECRET, //secret
-                      { expiresIn: "1h" } //options
-                    );
-                    //console.log(token);
-                    if (token) {
-                      res
-                        .status(201)
-                        .set("Authorization", token) //fügt dem Header der Response ein Feld "Authorization" hinzu mit dem Wert des tokens
-                        .json(user);
-                    }
-                  })
-                  .catch((err) => res.json(err));
-              }
-            });
         } else {
-          console.log("Username Or Email Already used!!");
-          res.send("User already exists");
+          pool.query(
+              `
+              INSERT INTO users 
+              (email, password, first_name, last_name, username, company_id, role_id)
+              VALUES 
+              ($1, $2, $3, $4, $5, $6, $7) 
+              RETURNING *;
+              `,
+              [
+                email,
+                hashedPassword,
+                first_name,
+                last_name,
+                username,
+                company_id,
+                role_id,
+              ]
+          )
+          .then((user) => {
+            const newUser = user.rows[0];
+            const token = jwt.sign(
+              { email: newUser.email }, //payload
+              process.env.JWT_SECRET, //secret
+              { expiresIn: "1h" } //options
+            );
+            //console.log(token);
+            if (token) {
+              res
+                .status(201)
+                .set("Authorization", token) //fügt dem Header der Response ein Feld "Authorization" hinzu mit dem Wert des tokens
+                .json(user);
+            }
+          })
+          .catch((err) => res.json({err : err.message}));
         }
-      });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+      })
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
-};
+
 
 /*********************___Delete User ___*************************/
 export const deleteUser = async (req, res) => {
