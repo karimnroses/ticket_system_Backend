@@ -271,9 +271,6 @@ export const getCompanyTickets = async (req, res) => {
   }
 };
 
-/*********************___Get Infos from a User___*************************/
-export const getUserInfos = async (req, res) => {};
-
 /*********************___Get all the Tickets from All Users___*************************/
 export const getTicketsFromAllUsers = async (req, res) => {
   const { orderBy, ascOrDesc } = req.body;
@@ -310,4 +307,31 @@ try {
   res.status(500).json({ error: error.message });
  
 }
+};
+
+/*********************___Get Infos from a User___*************************/
+export const getCompanyInfos = async (req, res) => {
+  const { company_name } = req.body;
+
+  try {
+    await pool.query(
+      `
+      SELECT 
+      name, adress, number, zip, city, country
+      FROM company
+      WHERE name = $1
+      `
+      , [company_name]
+    )
+    .then((results) => {
+      if(results.rowCount === 0) {
+        res.status(404).json("Something went wrong!!")
+      } else {
+        res.status(200).json(results)
+      }
+    })
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
 };
