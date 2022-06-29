@@ -37,9 +37,10 @@ export const logIn = async (req, res) => {
         //    `,
         //   [email]
         // );
-        res.status(200).set("authorization", token).send("Login successfully");
+        
         
        
+     
       } else {
         console.log("password not match");
         res.status(401).send("Unauthorized");
