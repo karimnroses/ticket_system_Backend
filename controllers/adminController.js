@@ -6,8 +6,7 @@ import jwt from "jsonwebtoken";
 /*********************___Create a New Company__*************************/
 export const createNewCompany = async (req, res) => {
   try {
-    const { company_name, adress, number, zip, city, country } = req.body;
-
+    const { company_name, adress, number, zip, city, country, status_id } = req.body;
     await pool.query(
       `
       SELECT * FROM company WHERE name = $1;
@@ -18,16 +17,16 @@ export const createNewCompany = async (req, res) => {
       if(company.rowCount !== 0){
         res.status(409).json("Company already exists")
       } else {
+        const status_id = 1; //Standards status for new created company is "aktiv" -> ID = 1. take a look at the company_status
          pool.query(
           `
           INSERT INTO company 
-          (name, adress, number, zip, city, country)
-          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
+          (name, adress, number, zip, city, country, status_id)
+          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;
           `,
-          [company_name, adress, number, zip, city, country]
+          [company_name, adress, number, zip, city, country, status_id]
         )
         .then(result => res.status(201).json(result))
-        .catch(err => res.status(500).json({error : err.message}))
       }
     })
     
@@ -169,11 +168,10 @@ export const deleteUser = async (req, res) => {
 export const updateUser = async (req, res) => {};
 
 /*********************___Get a list of all users___*************************/
-export const getAllUsers = async (req, res) => {
-  const { company_name } = req.body;
+export const getAllCompanies = async (req, res) => {
   try {
     await pool.query(
-      `SELECT  u.id AS "user_id", first_name, last_name, email, username, name AS "company_Name" FROM users u
+      `SELECT  u.id AS "user_id", c.id AS "Company_id",  name AS "company_Name", first_name, last_name, email, username FROM users u
       INNER JOIN company c
       ON u.company_id = c.id
       ORDER BY c.name ASC;`,
@@ -198,6 +196,9 @@ export const deleteUserTicket = async (req, res) => {
 /*********************___Update existing Ticket ___*************************/
 export const updateTicket = async (req, res) => {
   const { id, new_ticket_status_id } = req.body; //Hier soll im Frontend Wenn admin einen Status gewählt hat nur die ID des gewählten Status in die Request geschickt werden
+                                                //Zum Beispiel wenn admin den Status "open" wählt, soll der Value des dropdown button 1 sein und nicht "open" 
+                                                //Bitte in die Tabelle ticketit_status die ID´s herausinden für jeden Status.
+                                                //Der ticket_id wird mit jedem Ticket zurückgeliefert => getCompanyTickets()
 
   const findTicket = await pool.query(`SELECT * FROM Ticketit WHERE id = $1`, [
     id,
@@ -234,16 +235,16 @@ export const getCompanyTickets = async (req, res) => {
     WHERE c.name = $1
     ORDER BY c.name ASC
     `,
-      [name],
-      (result) => {
+      [name])
+      .then((result) => {
         if (result.rowCount === 0) {
           res.status(404).json("The selected company has no Tickets");
         } else {
           console.log(result.rows);
           res.status(200).json(result);
         }
-      }
-    );
+      })
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
