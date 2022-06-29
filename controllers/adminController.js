@@ -69,9 +69,9 @@ export const createNewUser = async (req, res) => {
         username,
       ])
       .then((user) => {
-        if (user.rowCount !== 0) { //Username already used
+      if (user.rowCount !== 0) { //Username already used
           res.status(409).json("User already exists")
-
+          
         } else {
           pool.query(
               `
@@ -235,7 +235,7 @@ export const getCompanyTickets = async (req, res) => {
     ORDER BY c.name ASC
     `,
       [name],
-      (err, result) => {
+      (result) => {
         if (result.rowCount === 0) {
           res.status(404).json("The selected company has no Tickets");
         } else {
