@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 /*********************___Get All User Tickets___*************************/
 export const getAllMyTickets = async (res, req) => {
   const { username } = req.params;
+  console.log(username);
 
   try {
     const findTickets = await pool.query(``);
