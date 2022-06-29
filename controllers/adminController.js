@@ -35,7 +35,7 @@ export const createNewUser = async (req, res) => {
         username,
       ])
       .then((user) => {
-        if (user.rowCount == 0) {
+        if (user.rowCount === 0) {
           //Username OR Email not used
           pool
             .query(
@@ -44,9 +44,9 @@ export const createNewUser = async (req, res) => {
               [company_name]
             )
             .then((company) => {
-              if (company.rowCount == 0) {
+              if (company.rowCount === 0) {
                 //company dont exists => Add new Company first
-                pool
+                 pool
                   .query(
                     `INSERT INTO company (name, adress, number, zip, city, country)
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
@@ -257,7 +257,7 @@ export const getCompanyTickets = async (req, res) => {
     ORDER BY c.name ASC
     `,
       [name],
-      (err, result) => {
+      (result) => {
         if (result.rowCount === 0) {
           res.status(404).json("The selected company has no Tickets");
         } else {
