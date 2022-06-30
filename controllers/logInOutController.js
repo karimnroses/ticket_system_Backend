@@ -35,9 +35,7 @@ export const logIn = async (req, res) => {
               expiresIn: "1h",
             })
             res.status(200).set("authorization", token).send("Login successfully")
-          }
-            
-           
+          }          
         }
     
         //Send User/Admin Details && Content

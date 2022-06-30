@@ -120,58 +120,29 @@ export const createNewUser = async (req, res) => {
     });
 };
 
-/*********************___Delete User ___*************************_______________________________________________ Muss geändert werden*/ 
-export const deleteUser = async (req, res) => {
-  const { email, username, adminPassword, adminUsername } = req.body;
-  //Check if the user exists
-  try {
+/*********************___Delete User ___**************************/ 
+export const updateCompanysStatus = async (req, res) => {
+  const { company_id } = req.params;
+  const { new_status} = req.body;
+ 
+  if(typeof new_status === 'number'){
     await pool
-      .query(`SELECT * FROM users WHERE  email = $1 AND username = $2;`, [
-        email,
-        username,
-      ])
-      .then((user) => {
-        if (user.rowCount == 0) {
-          res.status(404).json("User not found");
-        } else {
-          pool.query(
-            //Get the Admin Password from the Database
-            `SELECT password FROM users WHERE username = $1;`,
-            [adminUsername],
-            (err, result) => {
-              const adminStoredPassword = result.rows[0].password;
-              //Compare the given password with the stored password
-              bcrypt
-                .compare(adminPassword, adminStoredPassword)
-                .then((result) => {
-                  if (result) {
-                    //Password matches
-                    pool.query(
-                      `Delete from users WHERE username = $1 AND email = $2 RETURNING *`,
-                      [username, email],
-                      (err, result) => {
-                        if (err) {
-                          throw err;
-                        }
-                        res.status(200).json("User successfully deleted");
-                      }
-                    );
-                  } else {
-                    //Password does not match
-                    res.status(200).json("Something went wrong!!");
-                  }
-                });
-            }
-          );
-        }
-      });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    .query(`UPDATE company SET status_id = $1 WHERE id = $2 RETURNING *;`, [
+      new_status,
+      company_id,
+    ])
+    .then((results) => {
+      res.status(201).json(results);
+    })
+    .catch((err) => {
+      res.status(500).json({ err: err.message });
+    })
+  } else {
+    res.status(500).json("The given status is not a number")
   }
+ 
 };
-
-
-
+  
 /*********************___Get the list of all the companies___*************************/
 export const getAllCompanies = async (req, res) => {
     await pool.query(
