@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 /*********************___Create a New Company__*************************/
 export const createNewCompany = async (req, res) => {
-  try {
+
     const { company_name, adress, number, zip, city, country, status_id } =
       req.body;
     await pool
@@ -15,7 +15,7 @@ export const createNewCompany = async (req, res) => {
         [company_name]
       )
       .then((company) => {
-        if (company.rowCount !== 0) {
+        if (company.rowCount > 0) {
           res.status(409).json("Company already exists");
         } else {
           const status_id = 1; //Standards status for new created company is "aktiv" -> ID = 1. take a look at the company_status
@@ -31,9 +31,6 @@ export const createNewCompany = async (req, res) => {
             .then((result) => res.status(201).json(result));
         }
       });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 };
 
 /*********************___Create a New User___*************************/
@@ -123,7 +120,7 @@ export const createNewUser = async (req, res) => {
     });
 };
 
-/*********************___Delete User ___*************************/
+/*********************___Delete User ___*************************_______________________________________________ Muss geändert werden*/ 
 export const deleteUser = async (req, res) => {
   const { email, username, adminPassword, adminUsername } = req.body;
   //Check if the user exists
@@ -173,66 +170,50 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-/*********************___Update existing User___*************************/
-export const updateUser = async (req, res) => {};
 
-/*********************___Get a list of all users___*************************/
+
+/*********************___Get the list of all the companies___*************************/
 export const getAllCompanies = async (req, res) => {
-  try {
     await pool.query(
       `SELECT  u.id AS "user_id", c.id AS "Company_id",  name AS "company_Name", first_name, last_name, email, username FROM users u
       INNER JOIN company c
       ON u.company_id = c.id
-      ORDER BY c.name ASC;`,
-      (err, result) => {
-        if (err) {
-          res.status(500).json({ error: err.message });
-        }
-        console.log(result.rows);
+      ORDER BY c.name ASC;`)
+      .then((result)=>{
         res.status(200).json(result);
-      }
-    );
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+      })
+      .catch((error) => { res.status(500).json({ error: error.message })}) 
 };
 
-/*********************___Delete User Ticket___*************************/
-export const deleteUserTicket = async (req, res) => {
-  const { ticket_id, email, username, adminPassword, adminUsername } = req.body;
-};
 
 /*********************___Update existing Ticket ___*************************/
 export const updateTicket = async (req, res) => {
-  const { id, new_ticket_status_id } = req.body; //Hier soll im Frontend Wenn admin einen Status gewählt hat nur die ID des gewählten Status in die Request geschickt werden
-  //Zum Beispiel wenn admin den Status "open" wählt, soll der Value des dropdown button 1 sein und nicht "open"
-  //Bitte in die Tabelle ticketit_status die ID´s herausinden für jeden Status.
-  //Der ticket_id wird mit jedem Ticket zurückgeliefert => getCompanyTickets()
-
-  const findTicket = await pool.query(`SELECT * FROM Ticketit WHERE id = $1`, [
-    id,
-  ]);
-  if (findTicket.rowCount === 0) {
-    res.status(404).json("Ticket not found");
-  } else {
-    await pool
+  const { new_ticket_status_id } = req.body;
+  const { ticket_id } = req.params;
+   /*
+      Hier soll im Frontend Wenn admin einen Status gewählt hat nur die ID des gewählten Status in die Request geschickt werden
+      Zum Beispiel wenn admin den Status "open" wählt, soll der Value des dropdown button 1 sein und nicht "open"
+      Bitte in die Tabelle ticketit_status die ID´s herausinden für jeden Status.
+      Der ticket_id wird mit jedem Ticket zurückgeliefert => getCompanyTickets()
+  */
+     pool
       .query(`UPDATE ticketit SET status_id = $1 WHERE id = $2 RETURNING *;`, [
         new_ticket_status_id,
-        id,
+        ticket_id,
       ])
       .then((results) => {
-        res.status(200).json("Status successfully updated");
+        res.status(201).json(results);
       })
       .catch((err) => {
         res.status(500).json({ err: err.message });
       });
-  }
 };
 
 /*********************___Get All the Ticket from one User___*************************/
 export const getCompanyTickets = async (req, res) => {
-  const { name } = req.params;
-  try {
+  const { company_id } = req.params;
+  console.log(company_id);
+
     await pool
       .query(
         `
@@ -242,37 +223,36 @@ export const getCompanyTickets = async (req, res) => {
     ON c.id = u.company_id
     JOIN ticketit t
     ON u.id = t.user_id
-    WHERE c.name = $1
+    WHERE c.id = $1
     ORDER BY c.name ASC
     `,
-        [name]
+        [company_id]
       )
       .then((result) => {
-        if (result.rowCount === 0) {
+        if (result.rowCount == 0) {
           res.status(404).json("The selected company has no Tickets");
         } else {
-          console.log(result.rows);
           res.status(200).json(result);
         }
-      });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+      })
+      .catch((error) =>  {res.status(500).json({ error: error.message })})
+
+    
 };
 
 /*********************___Get all the Tickets from All Users___*************************/
 export const getTicketsFromAllUsers = async (req, res) => {
-  const { orderBy, ascOrDesc } = req.params;
-  try {
+  const { orderBy, ascOrDesc } = req.body;
+
     await pool
       .query(
         `
     SELECT 
     t.subject, t.content, t.created_at, t.completed_at, t.img_url,
     u.first_name, u.last_name, u.username, u.email,
-    c.name,
-    ca.name, ca.color,
-    s.status, s.color
+    c.name As "Company",
+    ca.name AS "category", ca.color AS "category_color",
+    s.status, s.color AS "status_Color"
     FROM ticketit t
     JOIN users u
     ON t.user_id = u.id
@@ -287,39 +267,36 @@ export const getTicketsFromAllUsers = async (req, res) => {
       )
       .then((results) => {
         if (results.rowCount === 0) {
-          res.status(404).json("The selected company has no Tickets");
+          res.status(404).json("Ther s no Tickets");
         } else {
           res.status(200).json(results);
         }
-      });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+      })
+      .catch((error) => { res.status(500).json({ error: error.message }) 
+    })
 };
 
 /*********************___Get Infos from a User___*************************/
 export const getCompanyInfos = async (req, res) => {
-  const { company_name } = req.body;
+  const { company_id } = req.params;
 
-  try {
+
     await pool
       .query(
         `
       SELECT 
-      name, adress, number, zip, city, country
+      name, adress AS "street", number AS "street number", zip, city, country, phone, email
       FROM company
-      WHERE name = $1
+      WHERE id = $1
       `,
-        [company_name]
-      )
+        [company_id]
+      ) 
       .then((results) => {
         if (results.rowCount === 0) {
           res.status(404).json("Something went wrong!!");
         } else {
           res.status(200).json(results);
         }
-      });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+      })
+      .catch((error) => {     res.status(500).json({ error: error.message }) })
 };
