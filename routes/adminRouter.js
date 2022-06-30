@@ -14,7 +14,7 @@ adminRouter.route("/ticketsprocompany/:company_id/:ticket_id").put(updateTicket)
 adminRouter.route("/tickets").post(getTicketsFromAllUsers) //done Aber muss später wenn wir mehrere Tickets haben nochmal geprüft werden - success
 adminRouter.route("/tickets/:ticket_id").put(updateTicket) // success
 adminRouter.route("/companies").get(getAllCompanies)//done getAllCompanies -> success - 
-adminRouter.route("/companies/:company_id").post(getCompanyInfos).put(updateCompanysStatus) //success
+adminRouter.route("/companies/infos/:company_id").post(getCompanyInfos).put(updateCompanysStatus) //success
 adminRouter.route("/companies/addnewcompany").post(createNewCompany) // done Check -> success
 adminRouter.route("/users/addnewuser").post(createNewUser)//done checked -> success
 
