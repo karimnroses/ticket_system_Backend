@@ -4,9 +4,9 @@ import jwt from "jsonwebtoken";
 
 /*********************___Create a New Company__*************************/
 export const createNewCompany = async (req, res) => {
-
-    const { company_name, adress, number, zip, city, country, status_id } =
-      req.body;
+  console.log("hi")
+    const status_id = 1; //Standards status for new created company is "aktiv" -> ID = 1. take a look at the company_status
+    const { company_name, adress, number, zip, city, country, phone, email} = req.body;
     await pool
       .query(
         `
@@ -18,19 +18,20 @@ export const createNewCompany = async (req, res) => {
         if (company.rowCount > 0) {
           res.status(409).json("Company already exists");
         } else {
-          const status_id = 1; //Standards status for new created company is "aktiv" -> ID = 1. take a look at the company_status
           pool
             .query(
               `
           INSERT INTO company 
-          (name, adress, number, zip, city, country, status_id)
-          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;
+          (name, adress, number, zip, city, country, status_id, phone, email)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *;
           `,
-              [company_name, adress, number, zip, city, country, status_id]
+              [company_name, adress, number, zip, city, country, status_id, phone, email]
             )
-            .then((result) => res.status(201).json(result));
+            .then((result) => res.status(201).json(result))
+            .catch((err) => res.json({ err: err.message }));
         }
-      });
+      })
+      .catch((err) => res.json({ err: err.message }));
 };
 
 /*********************___Create a New User___*************************/
@@ -146,7 +147,7 @@ export const updateCompanysStatus = async (req, res) => {
 /*********************___Get the list of all the companies___*************************/
 export const getAllCompanies = async (req, res) => {
     await pool.query(
-      `SELECT  u.id AS "user_id", c.id AS "Company_id",  name AS "company_Name", first_name, last_name, email, username FROM users u
+      `SELECT  u.id AS "user_id", c.id AS "Company_id",  name AS "company_Name", u.first_name, u.last_name, u.email, u.username FROM users u
       INNER JOIN company c
       ON u.company_id = c.id
       ORDER BY c.name ASC;`)
