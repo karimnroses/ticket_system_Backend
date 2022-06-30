@@ -2,34 +2,35 @@ import pool from "../db/pg.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-
 /*********************___Create a New Company__*************************/
 export const createNewCompany = async (req, res) => {
   try {
-    const { company_name, adress, number, zip, city, country, status_id } = req.body;
-    await pool.query(
-      `
+    const { company_name, adress, number, zip, city, country, status_id } =
+      req.body;
+    await pool
+      .query(
+        `
       SELECT * FROM company WHERE name = $1;
-      `
-      ,[company_name]
-    )
-    .then((company) => {
-      if(company.rowCount !== 0){
-        res.status(409).json("Company already exists")
-      } else {
-        const status_id = 1; //Standards status for new created company is "aktiv" -> ID = 1. take a look at the company_status
-         pool.query(
-          `
+      `,
+        [company_name]
+      )
+      .then((company) => {
+        if (company.rowCount !== 0) {
+          res.status(409).json("Company already exists");
+        } else {
+          const status_id = 1; //Standards status for new created company is "aktiv" -> ID = 1. take a look at the company_status
+          pool
+            .query(
+              `
           INSERT INTO company 
           (name, adress, number, zip, city, country, status_id)
           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;
           `,
-          [company_name, adress, number, zip, city, country, status_id]
-        )
-        .then(result => res.status(201).json(result))
-      }
-    })
-    
+              [company_name, adress, number, zip, city, country, status_id]
+            )
+            .then((result) => res.status(201).json(result));
+        }
+      });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -37,82 +38,90 @@ export const createNewCompany = async (req, res) => {
 
 /*********************___Create a New User___*************************/
 export const createNewUser = async (req, res) => {
+  const {
+    email,
+    password,
+    first_name,
+    last_name,
+    username,
+    company_name,
+    role,
+  } = req.body;
+
   let company_id;
   let role_id;
-  try {
-    const {
-      email,
-      password,
-      first_name,
-      last_name,
-      username,
-      company_name,
-      role
-    } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10); // password hashing
+  const hashedPassword = await bcrypt.hash(password, 10); // password hashing
 
-    await pool
-      .query(`SELECT id FROM roles WHERE role = $1;`, [role])
-      .then((roleID) => role_id = roleID.rows[0].id); //Get the role ID from roles Table
-    
-      await pool
-      .query(`SELECT id FROM company WHERE name = $1;`, [company_name])
-      .then((companyID) => company_id = companyID.rows[0].id); //Get the company ID from company Table
-    
-    //Check if Username OR Email  already used
-    await pool
-      .query(`SELECT email, username FROM users WHERE  email = $1 OR username = $2;`, 
-      [
-        email,
-        username,
-      ])
-      .then((user) => {
-      if (user.rowCount !== 0) { //Username already used
-          res.status(409).json("User already exists")
-          
-        } else {
-          pool.query(
-              `
-              INSERT INTO users 
-              (email, password, first_name, last_name, username, company_id, role_id)
-              VALUES 
-              ($1, $2, $3, $4, $5, $6, $7) 
-              RETURNING *;
-              `,
-              [
-                email,
-                hashedPassword,
-                first_name,
-                last_name,
-                username,
-                company_id,
-                role_id,
-              ]
-          )
-          .then((user) => {
-            const newUser = user.rows[0];
-            const token = jwt.sign(
-              { email: newUser.email }, //payload
-              process.env.JWT_SECRET, //secret
-              { expiresIn: "1h" } //options
-            );
-            //console.log(token);
-            if (token) {
-              res
-                .status(201)
-                .set("Authorization", token) //fügt dem Header der Response ein Feld "Authorization" hinzu mit dem Wert des tokens
-                .json(user);
-            }
+  await pool
+    .query(`SELECT id FROM roles WHERE role = $1;`, [role])
+    .then((roleID) => {
+      role_id = roleID.rows[0].id; //Get the role ID from roles Table
+    })
+    .catch((error) => {
+      res.status(404).json({ error: error.message });
+    });
+
+  //Check if Username OR Email  already used
+  pool
+    .query(
+      `SELECT email, username FROM users WHERE  email = $1 OR username = $2;`,
+      [email, username]
+    )
+
+    .then((user) => {
+      if (user.rowCount > 0) {
+        //Username Or Email already exist
+        res.status(409).json("User already exists");
+      } else {
+        //User don t exist
+        //GET The Company_ID from the given Company
+        pool
+          .query(`SELECT id FROM company WHERE name = $1;`, [company_name])
+          .then((companyID) => {
+            company_id = companyID.rows[0].id;
           })
-          .catch((err) => res.json({err : err.message}));
-        }
-      })
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  }
-
+          .then(() => {
+            pool
+              .query(
+                `
+            INSERT INTO users 
+            (email, password, first_name, last_name, username, company_id, role_id)
+            VALUES 
+            ($1, $2, $3, $4, $5, $6, $7) 
+            RETURNING *;
+            `,
+                [
+                  email,
+                  hashedPassword,
+                  first_name,
+                  last_name,
+                  username,
+                  company_id,
+                  role_id,
+                ]
+              )
+              .then((user) => {
+                const newUser = user.rows[0];
+                const token = jwt.sign(
+                  { email: newUser.email }, //payload
+                  process.env.JWT_SECRET, //secret
+                  { expiresIn: "1h" } //options
+                );
+                //console.log(token);
+                if (token) {
+                  res
+                    .status(201)
+                    .set("Authorization", token) //fügt dem Header der Response ein Feld "Authorization" hinzu mit dem Wert des tokens
+                    .json(user);
+                }
+              })
+              .catch((err) => res.json({ err: err.message }));
+          })
+          .catch((err) => res.json({ err: err.message }));
+      }
+    });
+};
 
 /*********************___Delete User ___*************************/
 export const deleteUser = async (req, res) => {
@@ -196,9 +205,9 @@ export const deleteUserTicket = async (req, res) => {
 /*********************___Update existing Ticket ___*************************/
 export const updateTicket = async (req, res) => {
   const { id, new_ticket_status_id } = req.body; //Hier soll im Frontend Wenn admin einen Status gewählt hat nur die ID des gewählten Status in die Request geschickt werden
-                                                //Zum Beispiel wenn admin den Status "open" wählt, soll der Value des dropdown button 1 sein und nicht "open" 
-                                                //Bitte in die Tabelle ticketit_status die ID´s herausinden für jeden Status.
-                                                //Der ticket_id wird mit jedem Ticket zurückgeliefert => getCompanyTickets()
+  //Zum Beispiel wenn admin den Status "open" wählt, soll der Value des dropdown button 1 sein und nicht "open"
+  //Bitte in die Tabelle ticketit_status die ID´s herausinden für jeden Status.
+  //Der ticket_id wird mit jedem Ticket zurückgeliefert => getCompanyTickets()
 
   const findTicket = await pool.query(`SELECT * FROM Ticketit WHERE id = $1`, [
     id,
@@ -222,10 +231,11 @@ export const updateTicket = async (req, res) => {
 
 /*********************___Get All the Ticket from one User___*************************/
 export const getCompanyTickets = async (req, res) => {
-  const { name } = req.body;
+  const { name } = req.params;
   try {
-    await pool.query(
-      `
+    await pool
+      .query(
+        `
     SELECT t.id, t.subject ,c.name, u.username
     FROM company c
     JOIN users u
@@ -235,7 +245,8 @@ export const getCompanyTickets = async (req, res) => {
     WHERE c.name = $1
     ORDER BY c.name ASC
     `,
-      [name])
+        [name]
+      )
       .then((result) => {
         if (result.rowCount === 0) {
           res.status(404).json("The selected company has no Tickets");
@@ -243,8 +254,7 @@ export const getCompanyTickets = async (req, res) => {
           console.log(result.rows);
           res.status(200).json(result);
         }
-      })
-
+      });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -252,7 +262,7 @@ export const getCompanyTickets = async (req, res) => {
 
 /*********************___Get all the Tickets from All Users___*************************/
 export const getTicketsFromAllUsers = async (req, res) => {
-  const { orderBy, ascOrDesc } = req.body;
+  const { orderBy, ascOrDesc } = req.params;
   try {
     await pool
       .query(
