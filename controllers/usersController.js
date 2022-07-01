@@ -31,10 +31,45 @@ export const getAllMyTickets = async (req, res) => {
 
 
 /*********************___Create a New Ticket from User___*************************/
-export const createNewTicket = (req, res) => {
-  const { username } = req.params;
-  const { subject, content } = req.body;
+export const createNewTicket = async (req, res) => {
+  const { id } = req.params;
+  const { subject, content, category } = req.body;
+  const status_id = 1;//Standard is ticket OPEN
+  const created_at = 'now()';
+  let category_id; //From category table
 
+
+  await pool.query(
+    `
+    SELECT id FROM ticketit_category
+    WHERE name = $1
+    `,[category]
+  )
+  .then((category) => {
+    category_id = category.rows[0].id
+    pool.query(
+      `
+        INSERT INTO ticketit
+        (subject, content,status_id, user_id,category_id, created_at)
+        VALUES
+        ($1, $2, $3, $4, $5, $6) RETURNING *;
+      `,
+      [subject, content, status_id, id, category_id,created_at]
+    )
+    .then((ticket) =>{
+        res.status(201).json(ticket)
+    })
+    .catch((error) => res.status(500).json({error: error.message}))
+
+  })
+  
+  
+  
+  
+  
+  .catch((error) => res.status(500).json({error: error.message}))
+
+  console.log(category_id)
 
 
 }
