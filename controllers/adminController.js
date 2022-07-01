@@ -1,9 +1,14 @@
 import pool from "../db/pg.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import {addUserValidation, addCompanyValidation} from "../validation.js";
 
 /*********************___Create a New Company__*************************/
 export const createNewCompany = async (req, res) => {
+   // Validate Admin Input for a Company
+   const { error } = addCompanyValidation(req.body);
+   if (error) return res.status(400).send(error.details[0].message);
+
     const status_id = 1; //Standards status for new created company is "aktiv" -> ID = 1. take a look at the company_status
     const { company_name, adress, number, zip, city, country, phone, email} = req.body;
     await pool
@@ -35,6 +40,10 @@ export const createNewCompany = async (req, res) => {
 
 /*********************___Create a New User___*************************/
 export const createNewUser = async (req, res) => {
+  // Validate Admin Input for a User
+  const { error } = addUserValidation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
   const {
     email,
     password,
