@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 
 /*********************___Create a New Company__*************************/
 export const createNewCompany = async (req, res) => {
-  console.log("hi")
     const status_id = 1; //Standards status for new created company is "aktiv" -> ID = 1. take a look at the company_status
     const { company_name, adress, number, zip, city, country, phone, email} = req.body;
     await pool
