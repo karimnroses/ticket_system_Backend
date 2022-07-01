@@ -213,7 +213,7 @@ export const getCompanyTickets = async (req, res) => {
 
 /*********************___Get all the Tickets from All Users___*************************/
 export const getTicketsFromAllUsers = async (req, res) => {
-  const { orderBy, ascOrDesc } = req.body;
+  const { orderBy, ascOrDesc } = req.params;
 
     await pool
       .query(
