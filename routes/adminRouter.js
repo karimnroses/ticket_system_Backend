@@ -1,8 +1,3 @@
-//Kunden Acounts erstellen -> signup (post)
-//Kunden Accounts löschen - Aktualisieren
-//Sich einlogen können
-//Alle Tickets von allen Kunden sehen können
-//Alle Tickets vcon allen Kunden uipdaten können
 import { logIn } from "../controllers/logInOutController.js"
 import { Router } from "express";
 import { getTicketsFromAllUsers, getCompanyInfos, getCompanyTickets, createNewUser, updateTicket, getAllCompanies, updateCompanysStatus, createNewCompany } from "../controllers/adminController.js"

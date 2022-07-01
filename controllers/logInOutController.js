@@ -1,10 +1,15 @@
 import pool from "../db/pg.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { loginValidation} from "../validation.js";
 
 
 /*********************___LOGIN___*************************/
 export const logIn = async (req, res) => {
+    // Validate the user input
+    const { error } = loginValidation(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
     const { email, password } = req.body;
     let findUser;
     let role;
