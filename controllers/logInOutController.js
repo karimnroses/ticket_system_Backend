@@ -7,9 +7,16 @@ import jwt from "jsonwebtoken";
 export const logIn = async (req, res) => {
     const { email, password } = req.body;
     let findUser;
+    let role;
+
     
        await pool.query(
-        `SELECT email, password FROM users WHERE email =$1;`,
+        `
+          SELECT u.email, u.password, r.role FROM users u 
+          JOIN roles r
+          ON
+          u.role_id = r.id
+          WHERE email =$1;`,
         [email]
       ) //Verifying if the user exists
         .then((user) => { findUser  = user})
@@ -21,6 +28,7 @@ export const logIn = async (req, res) => {
             
           } else { //If Email exists
             const storedPassword = findUser.rows[0].password;
+            role = findUser.rows[0].role
             //Compare the given password with the stored user's password
             const isPasswordCorrect   =  await bcrypt.compare(password, storedPassword)
             
@@ -30,31 +38,16 @@ export const logIn = async (req, res) => {
             res.status(400).send("Invalid Email Or Password");
           } else{
             console.log("password match");
+            console.log(findUser.rows[0].role)
             //create and assign a token
-            const token = jwt.sign({ email: findUser.rows[0].email }, process.env.JWT_SECRET, {
+            const token = jwt.sign({ email: findUser.rows[0].email}, process.env.JWT_SECRET, {
               expiresIn: "1h",
             })
-            res.status(200).set("authorization", token).send("Login successfully")
+            res.status(200).set("authorization", token).json( {role: findUser.rows[0].role} )
           }          
         }
-    
-        //Send User/Admin Details && Content
-        // const findUserDetails = await pool.query(
-        //   `SELECT company.name, users.username, roles.role 
-        //   FROM company
-        //   INNER JOIN users ON company.id = users.company_id
-        //   INNER JOIN roles ON roles.id = users.role_id
-        //   WHERE email = $1; 
-        //    `,
-        //   [email]
-        // );
-        
-        
-       
-     
       }
  
 
 
-  /*********************___ ___*************************/
   
