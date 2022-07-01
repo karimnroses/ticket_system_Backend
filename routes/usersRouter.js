@@ -7,8 +7,9 @@ import { verifySession } from "../controllers/usersController.js"
 const userRouter = Router();
 
 userRouter.route("/login").post(logIn);//logInOutController
-userRouter.route("/:username/my-tickets").get(getAllMyTickets).post(createNewTicket);
-userRouter.get("/verify", verifyToken, verifySession)
+userRouter.route("/mytickets/:id").post(getAllMyTickets);
+userRouter.route("/:id/create-ticket").post(createNewTicket);
+userRouter.get("/verify", verifyToken, verifySession);
 
 
 
