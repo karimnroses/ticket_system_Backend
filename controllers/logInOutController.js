@@ -12,11 +12,16 @@ export const logIn = async (req, res) => {
     
        await pool.query(
         `
-          SELECT u.email, u.password, r.role FROM users u 
+          SELECT u.id AS "user_id", u.email, u.password, u.first_name, u.last_name, u.username,
+          r.role,
+          c.id AS "company_id", c.name AS "company_name"
+          FROM users u 
           JOIN roles r
           ON
           u.role_id = r.id
-          WHERE email =$1;`,
+          JOIN company c
+          ON u.company_id = c.id
+          WHERE u.email =$1;`,
         [email]
       ) //Verifying if the user exists
         .then((user) => { findUser  = user})
@@ -38,12 +43,12 @@ export const logIn = async (req, res) => {
             res.status(400).send("Invalid Email Or Password");
           } else{
             console.log("password match");
-            console.log(findUser.rows[0].role)
+            delete findUser.rows[0]['password'] //Remove password from the JSON response
             //create and assign a token
             const token = jwt.sign({ email: findUser.rows[0].email}, process.env.JWT_SECRET, {
               expiresIn: "1h",
             })
-            res.status(200).set("authorization", token).json( {role: findUser.rows[0].role} )
+            res.status(200).set("authorization", token).json( {user: findUser} )
           }          
         }
       }
