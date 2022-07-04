@@ -280,3 +280,10 @@ export const getCompanyInfos = async (req, res) => {
       })
       .catch((error) => {     res.status(500).json({ error: error.message }) })
 };
+
+  /*********************___Verify Session___*************************/
+  export const verifySession = (req, res) => {
+    console.log("verifysession Start")
+    res.status(200).send("Token successfully verified");
+    console.log("verifysession End")
+  };
