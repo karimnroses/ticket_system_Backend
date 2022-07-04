@@ -51,13 +51,16 @@ export const logIn = async (req, res) => {
             delete findUser.rows[0]['password'] //Remove password from the JSON response
             //create and assign a token
             const token = jwt.sign({ email: findUser.rows[0].email}, process.env.JWT_SECRET, {
-              expiresIn: "1h",
+              expiresIn: "1h"
             })
-            res.status(200).set("authorization", token).json( {user: findUser} )
+            res.status(200).set("Authorization", token).json( {user: findUser} )
           }          
         }
       }
  
 
 
-  
+  /*********************___Verify Session___*************************/
+export const verifySession = (req, res) => {
+  res.status(200).send("Token successfully verified");
+};
