@@ -51,11 +51,12 @@ export const createNewUser = async (req, res) => {
     last_name,
     username,
     company_name,
-    role,
+    role
   } = req.body;
 
   let company_id;
   let role_id;
+  let status_id = 1;
 
   const hashedPassword = await bcrypt.hash(password, 10); // password hashing
 
@@ -92,9 +93,9 @@ export const createNewUser = async (req, res) => {
               .query(
                 `
             INSERT INTO users 
-            (email, password, first_name, last_name, username, company_id, role_id)
+            (email, password, first_name, last_name, username, company_id, role_id, status_id)
             VALUES 
-            ($1, $2, $3, $4, $5, $6, $7) 
+            ($1, $2, $3, $4, $5, $6, $7, $8) 
             RETURNING *;
             `,
                 [
@@ -105,6 +106,7 @@ export const createNewUser = async (req, res) => {
                   username,
                   company_id,
                   role_id,
+                  status_id
                 ]
               )
               .then((user) => {
@@ -280,6 +282,33 @@ export const getCompanyInfos = async (req, res) => {
       })
       .catch((error) => {     res.status(500).json({ error: error.message }) })
 };
+
+ /*********************___ Get all Users ___*************************/
+export const getAllUsers = async (req, res) => {
+  const { orderBy, ascOrDesc } = req.params;
+
+  await pool.query(
+    `
+      SELECT u.first_name AS "first name", u.last_name AS "last name", u.username, c.name AS "company", u.email, us.status
+      FROM users u
+      JOIN company c
+      ON c.id = u.company_id
+      JOIN user_status us
+      ON us.id = u.status_id
+      ORDER BY ${orderBy} ${ascOrDesc}
+    `
+  )
+  .then((results) => {
+    if (results.rowCount === 0) {
+      res.status(404).json("Something went wrong!! Plz try again later!");
+    } else {
+      res.status(200).json(results);
+    }
+  })
+  .catch((error) => { res.status(500).json({ error: error.message }) 
+})
+  
+}
 
   /*********************___Verify Session___*************************/
   export const verifySession = (req, res) => {
