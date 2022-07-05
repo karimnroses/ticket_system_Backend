@@ -230,11 +230,11 @@ export const getTicketsFromAllUsers = async (req, res) => {
       .query(
         `
     SELECT 
-    t.subject, t.content, t.created_at, t.completed_at, t.img_url,
-    u.first_name, u.last_name, u.username, u.email,
-    c.name As "Company",
-    ca.name AS "category", ca.color AS "category_color",
-    s.status, s.color AS "status_Color"
+    t.id as "ticket_id", t.subject, t.content, t.created_at, t.completed_at, t.img_url,
+    u.id AS "user_id", u.first_name, u.last_name, u.username, u.email,
+    c.id AS "company_id", c.name As "Company",
+    ca.id AS "category_id", ca.name AS "category", ca.color AS "category_color",
+    s.id AS "status_id", s.status, s.color AS "status_Color"
     FROM ticketit t
     JOIN users u
     ON t.user_id = u.id
@@ -289,7 +289,7 @@ export const getAllUsers = async (req, res) => {
 
   await pool.query(
     `
-      SELECT u.first_name AS "first name", u.last_name AS "last name", u.username, c.name AS "company", u.email, us.status
+      SELECT u.id AS "user_id", c.id AS "company_id", us.id AS "status_id", u.first_name AS "first name", u.last_name AS "last name", u.username, c.name AS "company", u.email, us.status
       FROM users u
       JOIN company c
       ON c.id = u.company_id
