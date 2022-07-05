@@ -289,12 +289,14 @@ export const getAllUsers = async (req, res) => {
 
   await pool.query(
     `
-      SELECT u.id AS "user_id", c.id AS "company_id", us.id AS "status_id", u.first_name AS "first name", u.last_name AS "last name", u.username, c.name AS "company", u.email, us.status
+      SELECT u.id AS "user_id", c.id AS "company_id", us.id AS "status_id", u.first_name AS "first_name", u.last_name AS "last_name", u.username, c.name AS "company", u.email, us.status, r.role
       FROM users u
       JOIN company c
       ON c.id = u.company_id
       JOIN user_status us
       ON us.id = u.status_id
+      JOIN roles r
+      ON r.id = u.role_id
       ORDER BY ${orderBy} ${ascOrDesc}
     `
   )
