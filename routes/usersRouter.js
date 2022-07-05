@@ -7,7 +7,7 @@ import { verifyToken } from "../middleware/verifyToken.js"
 const userRouter = Router();
 
 userRouter.route("/login").post(logIn);//logInOutController
-userRouter.route("/:id").get(verifyToken, getAllMyTickets).post(verifyToken, createNewTicket);
+userRouter.route("/postlogin/:id").get(verifyToken, getAllMyTickets).post(verifyToken, createNewTicket);
 userRouter.get("/verify", verifyToken, verifySession);
 
 
