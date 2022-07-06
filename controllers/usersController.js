@@ -66,17 +66,68 @@ export const createNewTicket = async (req, res) => {
     .catch((error) => res.status(500).json({error: error.message}))
 
   })
-  
-  
-  
-  
-  
   .catch((error) => res.status(500).json({error: error.message}))
 
   console.log(category_id)
-
-
 }
+
+
+export const getMyInfos = async (req, res) => {
+  const { user_id } = req.params;
+
+  await pool.query(
+    `
+    SELECT first_name, last_name, username, email FROM users WHERE id =$1;
+    `, [user_id]
+  )
+  .then((result) => {
+    if (result.rowCount == 0) {
+      res.status(404).json("Something went wrong");
+    } else {
+      res.status(200).json(result);
+    }
+  })
+  .catch((error) =>  {res.status(500).json({ error: error.message })})
+}
+
+/*********************___User Edite his Password___*************************/
+export const editeMyPassword = async (req, res) => {
+  const { currentPassword, newPassword, username} = req.body;
+  let storedPassword;
+  const hashedPassword = await bcrypt.hash(newPassword, 10); // password hashing
+
+   await pool.query(
+    `
+    SELECT password FROM users WHERE username = $1;
+    `, [username]
+  )
+  .then((result) => {storedPassword = result.rows[0].password})
+  .catch((err) => res.status(500).json({ err: err.message }))
+
+  console.log(`storedPAssword: ${storedPassword}`)
+  //Compare the given password with the stored user's password
+ const isPasswordCorrect   = await bcrypt.compare(currentPassword, storedPassword)
+ console.log(`currentPassword: ${currentPassword}`)
+ if (!isPasswordCorrect) {
+  console.log("password not match");
+  res.status(400).send("Invalid username Or password");
+
+} else {
+  console.log("password match");
+ 
+  console.log(`hashedPassword ${hashedPassword}`)
+ 
+  pool.query(
+    `
+      UPDATE users SET password = $1 WHERE username = $2 RETURNING *;
+    `, [hashedPassword, username]
+  )
+  res.status(201).json("Password successfully updated")
+} 
+   
+  
+}
+
 
 /*********************___Verify Session___*************************/
 export const verifySession = (req, res) => {
