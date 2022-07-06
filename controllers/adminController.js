@@ -181,7 +181,7 @@ export const updateTicket = async (req, res) => {
      pool
       .query(`UPDATE ticketit SET status_id = $1 WHERE id = $2 RETURNING *;`, [
         new_ticket_status_id,
-        ticket_id,
+        ticket_id
       ])
       .then((results) => {
         res.status(201).json(results);
