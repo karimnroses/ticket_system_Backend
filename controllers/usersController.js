@@ -11,9 +11,13 @@ export const getAllMyTickets = async (req, res) => {
   await pool
     .query(
   `
-    SELECT * FROM ticketit t
+    SELECT t.id AS "ticket_id", t.subject, t.content, t.created_at, t.completed_at,
+    s.status, s.color AS "status_color"
+    FROM ticketit t
     JOIN users u
     ON u.id = t.user_id
+    JOIN ticketit_status s
+    ON t.ticket_id = id
     Where u.id = $1
     ORDER BY t.created_at DESC
   `,
