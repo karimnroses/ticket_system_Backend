@@ -17,7 +17,7 @@ export const getAllMyTickets = async (req, res) => {
     JOIN users u
     ON u.id = t.user_id
     JOIN ticketit_status s
-    ON t.status_id = s.id
+    ON t.status_id = s.ids
     Where u.id = $1
     ORDER BY t.created_at DESC
   `,
